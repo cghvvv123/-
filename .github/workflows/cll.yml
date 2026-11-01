@@ -1,4 +1,4 @@
-name: Android Multi-Module Build
+name: Android Build
 
 on:
   push:
@@ -31,11 +31,11 @@ jobs:
 
       - run: chmod +x ./gradlew
 
-      - run: ./gradlew assembleRelease -Pabi=arm64-v8a
+      - run: ./gradlew assembleRelease
 
       - uses: actions/upload-artifact@v4
         with:
-          name: release-app-arm64-v8a
+          name: release-rlin-inject
           path: app/build/outputs/apk/release/*.apk
 
   notify:
