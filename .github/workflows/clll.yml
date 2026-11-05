@@ -10,6 +10,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      GRADLE_OPTS: -Dorg.gradle.daemon=false -Xmx4g
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,30 +25,40 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - name: Set up Android SDK
-        uses: actions/setup-android@v3
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*','**/gradle-wrapper.properties') }}
 
-      - name: Install SDK/NDK/CMake
+      - name: Install Android SDK + NDK
         run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls -l $ANDROID_HOME || true
+
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+
+          yes | $SDKMANAGER --licenses || true
+
+          $SDKMANAGER \
             "platforms;android-34" \
             "build-tools;34.0.0" \
             "ndk;27.2.12479018" \
             "cmake;3.22.1"
 
-      - name: Make gradlew executable
+      - name: Grant gradlew permission
         run: chmod +x ./gradlew
 
-      - name: Build Release APK
-        run: ./gradlew assembleRelease -Pmodule=hud -Pabi=arm64-v8a
+      - name: Build
+        run: ./gradlew :hud:assembleRelease
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.2.12479018
 
-      - name: Upload Release APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: release-apk
           path: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/apk/*/release/*.apk
-            hud/build/outputs/apk/release/*.apk
-            hud/build/outputs/apk/*/release/*.apk
+            **/build/outputs/apk/release/*.apk
