@@ -10,6 +10,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      GRADLE_OPTS: -Dorg.gradle.daemon=false -Xmx4g
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,17 +23,14 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: |
-            platforms;android-34
-            build-tools;34.0.0
-            ndk;27.2.12479018
-            cmake;3.22.1
-
       - name: Grant gradlew permission
         run: chmod +x ./gradlew
+
+      - name: Show env
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          ls -la "$ANDROID_HOME" || true
 
       - name: Build
         run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
