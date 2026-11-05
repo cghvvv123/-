@@ -20,10 +20,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Set up Android SDK
+        uses: actions/setup-android@v3
 
-      - name: Install SDK/NDK/CMake
+      - name: Accept licenses and install SDK/NDK/CMake
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
@@ -36,7 +36,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build Release APK
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease -Pmodule=hud -Pabi=arm64-v8a
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
@@ -45,3 +45,5 @@ jobs:
           path: |
             app/build/outputs/apk/release/*.apk
             app/build/outputs/apk/*/release/*.apk
+            hud/build/outputs/apk/release/*.apk
+            hud/build/outputs/apk/*/release/*.apk
